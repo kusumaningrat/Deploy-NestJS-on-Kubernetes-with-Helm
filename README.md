@@ -4,7 +4,7 @@ This is my example exercise about deploying NestJS application to Kubernetes Clu
 
 ## Build Docker Image
 
-Navigate to `nest-api` directory and you will found the Dockerfile configuratio inside that can be use to build docker image for nestjs container. Let's build the docker image first.
+Navigate to `nest-api` directory at `dev` branch and you will found the Dockerfile configuratio inside that can be use to build docker image for nestjs container. Let's build the docker image first.
 
 ```bash
 docker build -t <your_dockerhub_username>/simple-nestjs-api:v1
@@ -46,7 +46,7 @@ sudo apt install nfs-common -y
 
 ## Deploy Database (PostgreSQL)
 
-Now, we will deploy the database first using helm chart. Navigate to `db` directory, then exec below command:
+Now, we will deploy the database first using helm chart. Navigate to `db` directory at `postgres` branch, then exec below command:
 ```bash
 helm install postgres ./postgres
 ```
@@ -65,7 +65,7 @@ psql -U <your_username> -d <your_database>
 
 ## Deploy NestJS (API)
 
-Now, we will deploy the nestjs application using helm chart. Navigate to `bookshelf` directory, then exec below command:
+Now, we will deploy the nestjs application using helm chart. Navigate to `bookshelf` directory at `helm` branch, then exec below command:
 ```bash
 helm install bookshelf ./bookshelf
 ```
