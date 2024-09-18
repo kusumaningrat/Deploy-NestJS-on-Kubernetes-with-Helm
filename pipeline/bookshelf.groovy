@@ -40,24 +40,23 @@ pipeline {
                 script{
                     timeout(time: 30){
                         FAILED_STAGE= 'Helm'
-                        git branch: 'helm', credentialsId: 'github', url: 'https://git-rbi.jatismobile.com/devops/bento-helm/admin-fe.git'
+                        git branch: 'helm', credentialsId: 'github', url: 'git@github.com:kusumaningrat/kusumaningrat-Deploy-NestJS-on-Kubernetes-with-Helm.git'
                     }
                 }
             }
         }
-        stage('Deploy'){
-            steps{
-                script{
-                    timeout(time: 30){
-                        FAILED_STAGE='Deploy'
-                        withKubeConfig([credentialsId: 'fba1e179-6e2b-4c53-a2e6-4855f795748f']){
-                            sh "helm upgrade --install --set image.tag=${params.VERSION}-${env.ENV} --atomic --wait ${env.SERVICE} helm -n ${env.NAMESPACE}"
-                            sh "kubectl rollout status deployment ${env.SERVICE} -n ${env.NAMESPACE}"
-                        }
-                    } 
-                }
-            }
-        }
-       
+        // stage('Deploy'){
+        //     steps{
+        //         script{
+        //             timeout(time: 30){
+        //                 FAILED_STAGE='Deploy'
+        //                 withKubeConfig([credentialsId: 'fba1e179-6e2b-4c53-a2e6-4855f795748f']){
+        //                     sh "helm upgrade --install --set image.tag=${params.VERSION}-${env.ENV} --atomic --wait ${env.SERVICE} helm -n ${env.NAMESPACE}"
+        //                     sh "kubectl rollout status deployment ${env.SERVICE} -n ${env.NAMESPACE}"
+        //                 }
+        //             } 
+        //         }
+        //     }
+        // }
     }
 }
