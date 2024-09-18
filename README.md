@@ -65,7 +65,7 @@ psql -U <your_username> -d <your_database>
 
 ## Deploy NestJS (API)
 
-Now, we will deploy the nestjs application using helm chart. Navigate to `bookshelf` directory at `bookshelf` branch, then exec below command:
+Now, we will deploy the nestjs application using helm chart. Navigate to `bookshelf` directory at `helm` branch, then exec below command:
 ```bash
 helm install bookshelf ./bookshelf
 ```
