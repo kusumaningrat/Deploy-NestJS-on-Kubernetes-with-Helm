@@ -1,0 +1,27 @@
+replicaCount: 1
+
+postgres:
+  name: postgres
+  group: db
+  container:
+    image: postgres:13.1
+    port: 5432
+  secret:
+    name: postgres-secret
+    user: kusumaningrat
+    password: kusumaningrat16
+    db_name: bookshelf
+  service:
+    name: postgres
+    type: ClusterIP
+    port: 5432
+  volume:
+    name: postgres-volume
+    size: 10Gi
+    kind: PersistentVolumeClaim
+    secretPath: /etc/postgre-cred
+    mountPath: /data/db
+  pvc:
+    name: postgres-pvc
+    storage: 5Gi
+    accessModes: ReadWriteOnce

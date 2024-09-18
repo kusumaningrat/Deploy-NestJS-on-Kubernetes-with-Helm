@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.postgres.name }}
+  labels:
+    app: {{ .Values.postgres.name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.postgres.name }}
+      tier: {{ .Values.postgres.group }}
+  serviceName: {{ .Values.postgres.service.name }}-service
+  replicas: {{ .Values.replicaCount }}
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.postgres.name }}
+        tier: {{ .Values.postgres.group }}
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: {{ .Values.postgres.name }}
+        image: {{ .Values.postgres.container.image }}
+        env:
+        - name: POSTGRES_USER
+          value: {{ .Values.postgres.secret.user }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.postgres.secret.password }}
+        - name: POSTGRES_DB
+          value: {{ .Values.postgres.secret.db_name }}
+        ports:
+        - containerPort: {{ .Values.postgres.container.port }}
+          name: database
+        volumeMounts:
+        - name: {{ .Values.postgres.volume.name }}
+          mountPath: {{ .Values.postgres.volume.mountPath }}
+        - name: secret-mount
+          mountPath: {{ .Values.postgres.volume.secretPath }}
+      volumes:
+      - name: secret-mount
+        secret:
+          secretName: {{ .Values.postgres.secret.name }}
+      - name: {{ .Values.postgres.volume.name }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.postgres.pvc.name }}
