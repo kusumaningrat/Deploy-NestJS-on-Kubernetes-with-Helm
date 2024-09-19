@@ -5,58 +5,60 @@ pipeline {
         disableConcurrentBuilds()
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15')
     }
-    environment{
-        NAMESPACE = "default"
-        IMAGE = "kusumaningrat16/simple-nestjs-api"
-        FAILED_STAGE=''
+    parameters {
+        string(name: 'HUB_USERNAME', description: 'Docker Hub Username')
+        string(name: 'HUB_PASSWORD', description: 'Docker Hub Password')
     }
+    environment {
+        NAMESPACE = "default"
+        IMAGE = "${HUB_USERNAME}/simple-nestjs-api"
+        FAILED_STAGE=''
+        GENERATED_TAG=''
+        IMAGE_NAME=''
+    }
+    
     stages {
         stage('Pull Repo') {
             steps {
                 script{
                     timeout(time: 30){
                         FAILED_STAGE='Pull Repo'
-                        git branch: 'dev', credentialsId: 'github', url: 'git@github.com:kusumaningrat/kusumaningrat-Deploy-NestJS-on-Kubernetes-with-Helm.git'
+                        git branch: 'dev', credentialsId: 'github', url: 'https://github.com/kusumaningrat/Deploy-NestJS-on-Kubernetes-with-Helm.git'
                     }
                 }
             }
         }
-        stage('Build'){
-            steps{
-                script{
-                    timeout(time:30){
-                        FAILED_STAGE='Build'
-                        withCredentials([usernamePassword(credentialsId: 'docker_hub')]){
-                            sh "docker build -t ${IMAGE}:${params.VERSION} ."
-                            sh "docker push ${IMAGE}:${params.VERSION}"
-                        }
-                    }
-                
-                }
-            }
-        }
-        stage('Clone Helm Repo'){
-            steps{
-                script{
+        stage('Build') {
+            steps {
+                script {
+                    FAILED_STAGE='Build'
                     timeout(time: 30){
-                        FAILED_STAGE= 'Helm'
-                        git branch: 'helm', credentialsId: 'github', url: 'git@github.com:kusumaningrat/kusumaningrat-Deploy-NestJS-on-Kubernetes-with-Helm.git'
+                        def currentDate = sh(returnStdout: true, script: 'date +"%Y%m%d"').trim()
+                        def uid = UUID.randomUUID().toString().substring(0, 6)
+                        def combinedString = "${currentDate}-${uid}"
+                        def image = "${env.IMAGE}:${combinedString}"
+                        env.GENERATED_IMAGE= "${env.IMAGE}:${combinedString}"
+                        
+                        echo "Current Date + UID: ${combinedString}"
+
+                        dockerImage = docker.build image
                     }
                 }
             }
         }
-        // stage('Deploy'){
-        //     steps{
-        //         script{
-        //             timeout(time: 30){
-        //                 FAILED_STAGE='Deploy'
-        //                 withKubeConfig([credentialsId: 'fba1e179-6e2b-4c53-a2e6-4855f795748f']){
-        //                     sh "helm upgrade --install --set image.tag=${params.VERSION}-${env.ENV} --atomic --wait ${env.SERVICE} helm -n ${env.NAMESPACE}"
-        //                     sh "kubectl rollout status deployment ${env.SERVICE} -n ${env.NAMESPACE}"
-        //                 }
-        //             } 
-        //         }
-        //     }
-        // }
+        stage('Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'HUB_USERNAME', passwordVariable: 'HUB_PASSWORD')]) {
+                    script {
+                        FAILED_STAGE = 'Push'
+                        // Login to Docker Hub
+                        sh("echo '${HUB_PASSWORD}' | docker login -u '${HUB_USERNAME}' --password-stdin https://index.docker.io/v1/")
+                        // Push the image
+                        docker.image("${env.GENERATED_IMAGE}").push()
+                    }
+                }
+            }
+        }
+
     }
 }
