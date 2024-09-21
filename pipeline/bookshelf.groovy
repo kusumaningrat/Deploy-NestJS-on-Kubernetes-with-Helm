@@ -60,19 +60,41 @@ pipeline {
                 }
             }
         }
-        
-        stage('Deploy') {
+
+        stage('Update Values') {
             steps {
                 script {
-                    FAILED_STAGE = 'Deploy'
-                    withCredentials([credentialsId: 'kubeconfig']) {
-                        sh "helm upgrade --install -n ${NAMESPACE} --set image.tag=${GENERATED_IMAGE} --atomic --wait ${SERVICE} ."
-                        sh "kubectl rollout restart deployment/${SERVICE} -n ${NAMESPACE}"
+                    FAILED_STAGE = 'Update Values'
+                    timeout(time: 30) {
+                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                            git branch: 'helm', credentialsId: 'github', url: 'https://github.com/kusumaningrat/Deploy-NestJS-on-Kubernetes-with-Helm.git'
+                            
+                            sh """
+                                git config user.email 'kusumanetcom@gmail.com'
+                                git config user.name 'kusumaningrat'
+                                sed -i 's|tag:.*|tag: ${env.GENERATED_IMAGE.split(':')[1]}|g' bookshelf/values.yaml
+                                git add bookshelf/values.yaml
+                                git commit -m "Update image to Jenkins-generated image"
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/kusumaningrat/Deploy-NestJS-on-Kubernetes-with-Helm.git helm
+                            """
+                        }
                     }
-                    
                 }
             }
         }
 
+        stage('Deploy') {
+            steps {
+                script {
+                    FAILED_STAGE = 'Deploy'
+                    timeout(time: 30) {
+                        sh """
+                            argocd login --username admin --password ${ARGOCD_PASSWORD} ${ARGOCD_SERVER}
+                            argocd app sync bookshelf
+                        """
+                    }
+                }
+            }
+        }
     }
 }
