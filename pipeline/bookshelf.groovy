@@ -82,19 +82,5 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy') {
-            steps {
-                script {
-                    FAILED_STAGE = 'Deploy'
-                    timeout(time: 30) {
-                        sh """
-                            argocd login --username admin --password ${ARGOCD_PASSWORD} ${ARGOCD_SERVER}
-                            argocd app sync bookshelf
-                        """
-                    }
-                }
-            }
-        }
     }
 }
