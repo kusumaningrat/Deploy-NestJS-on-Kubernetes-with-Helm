@@ -4,7 +4,7 @@ image:
   repository: kusumaningrat16/simple-nestjs-api
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 20240921-35746b
+  tag: 20240921-9579ea
 
 service:
   type: LoadBalancer
