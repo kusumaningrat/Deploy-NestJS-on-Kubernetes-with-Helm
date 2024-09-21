@@ -15,6 +15,7 @@ pipeline {
         FAILED_STAGE=''
         GENERATED_TAG=''
         IMAGE_NAME=''
+        SERVICE='bookshelf'
     }
     
     stages {
@@ -56,6 +57,19 @@ pipeline {
                         // Push the image
                         docker.image("${env.GENERATED_IMAGE}").push()
                     }
+                }
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    FAILED_STAGE = 'Deploy'
+                    withCredentials([credentialsId: 'kubeconfig']) {
+                        sh "helm upgrade --install -n ${NAMESPACE} --set image.tag=${GENERATED_IMAGE} --atomic --wait ${SERVICE} ."
+                        sh "kubectl rollout restart deployment/${SERVICE} -n ${NAMESPACE}"
+                    }
+                    
                 }
             }
         }
